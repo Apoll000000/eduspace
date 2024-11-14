@@ -1,8 +1,14 @@
 
 
-main {
+.login-page {
     width: 100%;
     padding: 15px 20px 80px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center horizontally */
+    justify-content: center; /* Center vertically */
+    min-height: 100vh; /* Full viewport height */
+    box-sizing: border-box; /* Include padding in height calculations */
 }
 
 #hero {
@@ -38,10 +44,10 @@ main {
     justify-content: center;
 }
 
-main>section:nth-child(3) img {
+.login-page>section:nth-child(3) img {
     width: 50px;
 }
 
-.mode {
-    float: right;
+.drawer {
+    display: none;
 }

@@ -9,9 +9,9 @@ function Main() {
     return (
         <>
 
-            <main>
+            <section className="login-page">
                 <aside>
-                    <label className="swap swap-rotate mode">
+                    <label className="swap swap-rotate fixed top-4 left-4">
                         {/* this hidden checkbox controls the state */}
                         <input type="checkbox" className="theme-controller" value="synthwave" />
 
@@ -55,7 +55,7 @@ function Main() {
                         <img src={google} alt="google" />
                     </div>
                 </section>
-            </main>
+            </section>
         </>
     )
 }

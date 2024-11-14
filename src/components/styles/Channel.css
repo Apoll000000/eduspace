@@ -1,0 +1,25 @@
+.mainpage {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    display: flex;
+}
+
+.container-channel {
+    width: 100%;
+    padding: 20px;
+}
+
+@media (min-width: 738px) {
+    .container-channel {
+        width: 100%;
+        padding: 20px 7vw 20px 7vw;
+    }
+}
+
+@media (min-width: 0px) and (max-width: 737px) {
+    #sidebar {
+        display: none;
+    }
+
+}

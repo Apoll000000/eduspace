@@ -1,0 +1,135 @@
+#sidebar {
+    width: 30%;
+    max-width: 400px;
+    background: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%);
+    height: 100vh;
+    padding: 20px;
+    position: sticky;
+    top: 0;
+}
+
+#sidebar>.docker {
+    display: flex;
+    gap: .5vw;
+    align-items: center;
+    width: 100%;
+}
+
+.sidenav {
+    width: 30px;
+    height: 30px;
+    transition: box-shadow 0.3s ease, transform 0.1s ease;
+    border-radius: 100%;
+    background-color: white;
+
+}
+
+.sidenav:hover {
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+    border-radius: 100%;
+    cursor: pointer;
+}
+
+.sidenav:active {
+    transform: scale(0.95);
+    cursor: pointer;
+}
+
+.home {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 10px;
+    padding: 15px 0px 15px 0px;
+    border-radius: 13px;
+}
+
+nav h1 {
+    font-size: 120%;
+    font-weight: 800;
+    margin-top: 20px;
+    color: rgb(33, 51, 105);
+}
+
+.classes {
+    width: 100%;
+    height: 67vh;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: blue;
+
+}
+
+.classes::-webkit-scrollbar-button {
+    display: none;
+}
+
+.channel {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 12px;
+    background: radial-gradient(919px at 1.7% 6.1%, rgb(35, 57, 82) 0%, rgb(193, 220, 231) 100.2%);
+    padding: 20px;
+    transition: box-shadow 0.3s ease, transform 0.1s ease;
+}
+
+.channel:active {
+    transform: scale(0.95);
+    cursor: pointer;
+}
+
+.channel img {
+    width: 40px;
+}
+
+.channel p {
+    font-size: 120%;
+    font-weight: 400;
+    color: aliceblue;
+    width: 70%;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.menu li a {
+    font-size: 130%;
+    font-weight: 400;
+}
+
+@media (min-width: 0px) and (max-width: 968px) {
+    .channel p {
+        font-size: 90%;
+    }
+
+    nav h1 {
+        font-size: 100%;
+    }
+
+    .channel {
+        padding: 8px;
+    }
+
+    .channel img {
+        width: 30px;
+    }
+
+    .classes {
+        height: 56vh;
+    }
+}
+
+@media (min-width: 0px) and (max-width: 737px) {
+    #sidebar {
+        display: none;
+    }
+
+}

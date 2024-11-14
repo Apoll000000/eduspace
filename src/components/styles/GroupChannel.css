@@ -1,0 +1,10 @@
+.channel-banner {
+    width: 100%;
+    background: radial-gradient(919px at 1.7% 6.1%, rgb(35, 57, 82) 0%, rgb(193, 220, 231) 100.2%);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.channel-img {
+    width: 100px;
+}
