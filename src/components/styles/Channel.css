@@ -10,6 +10,10 @@
     padding: 20px;
 }
 
+.channel-id {
+    font-weight: 500;
+}
+
 @media (min-width: 738px) {
     .container-channel {
         width: 100%;

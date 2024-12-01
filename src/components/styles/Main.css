@@ -44,10 +44,14 @@
     justify-content: center;
 }
 
-.login-page>section:nth-child(3) img {
+#login>div img {
     width: 50px;
 }
 
 .drawer {
     display: none;
+}
+
+form {
+    width: 100%;
 }

@@ -1,7 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './styles/Channel.css'
 import './styles/Sidebar.css'
-import Sidebar from './Sidebar'
 import NewPage from './General'
 import GroupChannel from './GroupChannel'
 import plus from "../assets/plus.png";
@@ -9,9 +8,21 @@ import message from "../assets/chat.png";
 import school from "../assets/school.png";
 import bell from "../assets/bell.png";
 import techsub from "../assets/robotic-hand.png";
+import { useNavigate, Link } from "react-router-dom";
+import { createClient } from "@supabase/supabase-js";
+
+import JoinModal from './JoinModal'
+import CreateModal from './CreateModal'
+import PostModal from './PostModal'
 
 
-function Channel() {
+const SUPABASE_URL = "https://bwkkphvzmigjrnyptzhv.supabase.co"; // Replace with your Supabase URL
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3a2twaHZ6bWlnanJueXB0emh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE2NTQ1MjYsImV4cCI6MjA0NzIzMDUyNn0.VObIEpLVaxmi6wW8fL3TCMTzfLswcB6cawsFbVgcXmQ"; // Replace with your Supabase anon key
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const Channel = ({ token }) => {
+
     const [activeComponent, setActiveComponent] = useState(null);
 
 
@@ -19,6 +30,35 @@ function Channel() {
 
 
     const showGroup = () => setActiveComponent('GroupChannel');
+
+    const navigate = useNavigate();
+
+    function handleLogout() {
+        sessionStorage.removeItem('token');
+        setTimeout(() => {
+            navigate("/");
+        }, 1500);
+    }
+
+    const [userName, setUserName] = useState("");
+
+    useEffect(() => {
+        async function fetchName() {
+            const { data, error } = await supabase
+                .from("tbl_users") // Replace with your table name
+                .select("name")
+                .eq("id", token?.user?.id);
+
+            if (error) {
+                console.error("Error fetching data:", error);
+            } else if (data && data.length > 0) {
+                setUserName(data[0].name);
+            }
+        }
+
+        fetchName();
+    }, [token]);
+
 
     return (
         <>
@@ -30,22 +70,33 @@ function Channel() {
                                 <div className="w-10 rounded-full">
                                     <img
                                         alt="Tailwind CSS Navbar component"
-                                        src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
+                                        src="https://cdn-icons-png.flaticon.com/512/1053/1053244.png" />
                                 </div>
                             </div>
                             <ul
                                 tabIndex={0}
                                 className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
-                                <li>
+                                <li onClick={() => document.getElementById('profile_modal').showModal()}>
                                     <a className="justify-between">
                                         Profile
                                         <span className="badge">New</span>
                                     </a>
                                 </li>
                                 <li><a>Settings</a></li>
-                                <li><a>Logout</a></li>
+                                <li onClick={handleLogout}><a>Logout</a></li>
                             </ul>
                         </div>
+
+                        <dialog id="profile_modal" className="modal">
+                            <div className="modal-box">
+                                <form method="dialog">
+                                    {/* if there is a button in form, it will close the modal */}
+                                    <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                                </form>
+                                <h3 className="font-bold text-lg">Hello {userName || "User"}! </h3>
+                                <p className="py-4">Press ESC key or click on ✕ button to close</p>
+                            </div>
+                        </dialog>
 
                         <img className="sidenav" src={plus} alt="plus" onClick={() => document.getElementById('plus-modal').showModal()} />
 
@@ -57,9 +108,16 @@ function Channel() {
                                 </form>
                                 <ul className="menu text-base-content min-h-full w-full p-1 mt-2">
                                     {/* Sidebar content here */}
-                                    <li><a>Join a Channel/Class</a></li>
-                                    <li><a>Create a Channel/Class</a></li>
-                                    <li><a>Create a Public Post</a></li>
+                                    <li onClick={() => document.getElementById('join_modal').showModal()}><a>Join a Channel/Class</a></li>
+                                    <JoinModal />
+
+                                    <li onClick={() => document.getElementById("create_modal").showModal()}>
+                                        <a>Create a Channel/Class</a>
+                                    </li>
+                                    <CreateModal />
+
+                                    <li onClick={() => document.getElementById("post_modal").showModal()}><a>Create a Public Post</a></li>
+                                    <PostModal />
                                 </ul>
                             </div>
                         </dialog>
@@ -67,7 +125,6 @@ function Channel() {
                         <div className="indicator sidenav">
                             <img className="sidenav" src={message} alt="message" />
                             <span className="badge badge-xs badge-primary indicator-item"></span>
-
                         </div>
 
                         <img className="sidenav" src={school} alt="school" />
@@ -147,50 +204,6 @@ function Channel() {
                             <div className="badge badge-primary">+21</div>
                         </button>
 
-
-
-                        <button className="channel">
-                            <img src={techsub} alt="channel" />
-                            <p>Machine Learning & AI Learning in Computer Programming</p>
-                            <div className="badge badge-primary">+21</div>
-                        </button>
-
-
-                        <button className="channel">
-                            <img src={techsub} alt="channel" />
-                            <p>Machine Learning & AI Learning in Computer Programming</p>
-                            <div className="badge badge-primary">+21</div>
-                        </button>
-
-                        <button className="channel">
-                            <img src={techsub} alt="channel" />
-                            <p>Machine Learning & AI Learning in Computer Programming</p>
-                            <div className="badge badge-primary">+21</div>
-                        </button>
-
-                        <button className="channel">
-                            <img src={techsub} alt="channel" />
-                            <p>Machine Learning & AI Learning in Computer Programming</p>
-                            <div className="badge badge-primary">+21</div>
-                        </button>
-
-                        <button className="channel">
-                            <img src={techsub} alt="channel" />
-                            <p>Machine Learning & AI Learning in Computer Programming</p>
-                            <div className="badge badge-primary">+21</div>
-                        </button>
-
-                        <button className="channel">
-                            <img src={techsub} alt="channel" />
-                            <p>Machine Learning & AI Learning in Computer Programming</p>
-                            <div className="badge badge-primary">+21</div>
-                        </button>
-
-                        <button className="channel">
-                            <img src={techsub} alt="channel" />
-                            <p>Machine Learning & AI Learning in Computer Programming</p>
-                            <div className="badge badge-primary">+21</div>
-                        </button>
                     </div>
 
                 </nav>

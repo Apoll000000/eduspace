@@ -1,27 +1,22 @@
 import React, { useState } from "react";
 import './styles/Main.css';
-import fb from "../assets/facebook.png";
-import google from "../assets/google.png";
 import logo from "../assets/EDUSPACE.png";
-import { useNavigate, Link } from "react-router-dom";
 import { createClient } from "@supabase/supabase-js";
 
-// Supabase initialization without environment variables
-const SUPABASE_URL = "https://bwkkphvzmigjrnyptzhv.supabase.co"; // Replace with your Supabase URL
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3a2twaHZ6bWlnanJueXB0emh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE2NTQ1MjYsImV4cCI6MjA0NzIzMDUyNn0.VObIEpLVaxmi6wW8fL3TCMTzfLswcB6cawsFbVgcXmQ"; // Replace with your Supabase anon key
+const SUPABASE_URL = "https://bwkkphvzmigjrnyptzhv.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3a2twaHZ6bWlnanJueXB0emh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE2NTQ1MjYsImV4cCI6MjA0NzIzMDUyNn0.VObIEpLVaxmi6wW8fL3TCMTzfLswcB6cawsFbVgcXmQ";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const Main = ({setToken}) => {
-
+function Signup() {
     const [formData, setFormData] = useState({
         email: "",
-        password: ""
+        password: "",
+        confirmPassword: "",
     });
 
     const [alertMessage, setAlertMessage] = useState(null); // State for alert messages
     const [alertType, setAlertType] = useState("info"); // Alert type (info, success, error)
-    const navigate = useNavigate(); // Initialize useNavigate
 
     function handleChange(event) {
         setFormData((prevFormData) => ({
@@ -33,29 +28,54 @@ const Main = ({setToken}) => {
     async function handleSubmit(e) {
         e.preventDefault();
 
+        if (formData.password !== formData.confirmPassword) {
+            setAlertMessage("Passwords do not match. Please try again.");
+            setAlertType("error");
+            return;
+        }
+
         try {
-            const { data, error } = await supabase.auth.signInWithPassword({
+            const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
                 email: formData.email,
                 password: formData.password,
             });
 
-            if (error) {
-                throw error;
+            if (signUpError) throw signUpError;
+
+            setAlertMessage("Check your email for verification.");
+            setAlertType("info");
+
+            // Add a retry mechanism with a maximum number of attempts
+            let attempts = 0;
+            const maxAttempts = 10;
+            const userId = signUpData.user.id;
+
+            while (attempts < maxAttempts) {
+                await new Promise((resolve) => setTimeout(resolve, 3000)); // Wait 3 seconds
+
+                const { data: sessionData } = await supabase.auth.refreshSession();
+                if (sessionData?.user?.email_confirmed_at) {
+                    const { error: insertError } = await supabase
+                        .from("tbl_users")
+                        .insert([{ id: userId, name: formData.email, created_at: new Date().toISOString() }]);
+
+                    if (insertError) throw insertError;
+
+                    setAlertMessage("Account created successfully and added to the database.");
+                    setAlertType("success");
+                    return;
+                }
+                attempts++;
             }
 
-            setAlertMessage("Successfully Logged In");
-            setAlertType("success");
-            console.log(data);
-            setToken(data);
-            setTimeout(() => {
-                navigate("/main");
-            }, 1500);
-
+            setAlertMessage("Verification timeout. Please verify your email manually.");
+            setAlertType("error");
         } catch (error) {
-            setAlertMessage(error.message);
+            setAlertMessage(error.message || "An unexpected error occurred.");
             setAlertType("error");
         }
     }
+
 
 
     return (
@@ -81,6 +101,7 @@ const Main = ({setToken}) => {
                     <img src={logo} alt="logo" />
                 </section>
 
+                {/* Alert Section */}
                 {alertMessage && (
                     <div role="alert" className={`fixed top-3 alert alert-${alertType}`}>
                         <svg
@@ -101,11 +122,7 @@ const Main = ({setToken}) => {
                 )}
 
                 <form onSubmit={handleSubmit}>
-
-
                     <section id="login">
-
-
                         <label className="form-control w-full max-w-xs">
                             <div className="label">
                                 <span className="label-text font-semibold">Email Login:</span>
@@ -115,6 +132,7 @@ const Main = ({setToken}) => {
                                 placeholder="Enter email here"
                                 className="input input-bordered w-full max-w-xs"
                                 name="email"
+                                value={formData.email}
                                 onChange={handleChange}
                             />
                         </label>
@@ -127,20 +145,26 @@ const Main = ({setToken}) => {
                                 placeholder="Enter password here"
                                 className="input input-bordered w-full max-w-xs"
                                 name="password"
+                                value={formData.password}
                                 onChange={handleChange}
                             />
                         </label>
-                        <Link to="/signup"><a className="link link-info">Don't have an account? Sign up here</a></Link>
-                        <button className="btn btn-info" type="submit">
-                            Sign In
+                        <label className="form-control w-full max-w-xs">
+                            <div className="label">
+                                <span className="label-text font-semibold">Confirm Password:</span>
+                            </div>
+                            <input
+                                type="password"
+                                placeholder="Enter password here"
+                                className="input input-bordered w-full max-w-xs"
+                                name="confirmPassword"
+                                value={formData.confirmPassword}
+                                onChange={handleChange}
+                            />
+                        </label>
+                        <button type="submit" className="btn btn-info">
+                            Sign Up
                         </button>
-
-
-                        <h1 className="font-light">or Sign In With:</h1>
-                        <div>
-                            <img src={fb} alt="fb" />
-                            <img src={google} alt="google" />
-                        </div>
                     </section>
                 </form>
             </section>
@@ -148,4 +172,4 @@ const Main = ({setToken}) => {
     );
 }
 
-export default Main;
+export default Signup;
