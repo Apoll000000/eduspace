@@ -3,6 +3,7 @@ import './styles/Channel.css'
 import './styles/Sidebar.css'
 import NewPage from './General'
 import GroupChannel from './GroupChannel'
+import DefaultChannel from './DefaultChannel'
 import plus from "../assets/plus.png";
 import message from "../assets/chat.png";
 import school from "../assets/school.png";
@@ -15,6 +16,13 @@ import JoinModal from './JoinModal'
 import CreateModal from './CreateModal'
 import PostModal from './PostModal'
 
+import alpha from "../assets/alpha.png";
+import beta from "../assets/beta.png";
+import delta from "../assets/delta.png";
+import epsilon from "../assets/epsilon.png";
+import eta from "../assets/eta.png";
+import gamma from "../assets/gamma.png";
+
 
 const SUPABASE_URL = "https://bwkkphvzmigjrnyptzhv.supabase.co"; // Replace with your Supabase URL
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3a2twaHZ6bWlnanJueXB0emh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE2NTQ1MjYsImV4cCI6MjA0NzIzMDUyNn0.VObIEpLVaxmi6wW8fL3TCMTzfLswcB6cawsFbVgcXmQ"; // Replace with your Supabase anon key
@@ -23,13 +31,21 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const Channel = ({ token }) => {
 
-    const [activeComponent, setActiveComponent] = useState(null);
+    const [activeComponent, setActiveComponent] = useState("DefaultChannel");
+    const [selectedChannel, setSelectedChannel] = useState(null);
 
 
     const showGeneral = () => setActiveComponent('GeneralChannel');
 
+    const imageMap = {
+        alpha,
+        beta,
+        delta,
+        epsilon,
+        eta,
+        gamma,
+    };
 
-    const showGroup = () => setActiveComponent('GroupChannel');
 
     const navigate = useNavigate();
 
@@ -58,6 +74,48 @@ const Channel = ({ token }) => {
 
         fetchName();
     }, [token]);
+
+    const [channels, setChannels] = useState([]);
+
+    // Function to fetch channels
+    const fetchChannels = async () => {
+        if (!token?.user?.id) return;
+
+        try {
+            // Step 1: Get channel codes from tbl_enrollments
+            const { data: enrollments, error: enrollmentsError } = await supabase
+                .from('tbl_enrollments')
+                .select('channel_code')
+                .eq('user_id', token.user.id);
+
+            if (enrollmentsError) throw enrollmentsError;
+
+            const channelCodes = enrollments.map((enrollment) => enrollment.channel_code);
+
+            if (channelCodes.length > 0) {
+                // Step 2: Fetch channel details from tbl_channels
+                const { data: channelsData, error: channelsError } = await supabase
+                    .from('tbl_channels')
+                    .select('*')
+                    .in('channel_code', channelCodes);
+
+                if (channelsError) throw channelsError;
+
+                setChannels(channelsData);
+            }
+        } catch (error) {
+            console.error('Error fetching channels:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchChannels();
+    }, [token]);
+
+    const showGroup = (channel) => {
+        setSelectedChannel(channel); // Set the selected channel
+        setActiveComponent('GroupChannel'); // Show the GroupChannel component
+    };
 
 
     return (
@@ -109,15 +167,15 @@ const Channel = ({ token }) => {
                                 <ul className="menu text-base-content min-h-full w-full p-1 mt-2">
                                     {/* Sidebar content here */}
                                     <li onClick={() => document.getElementById('join_modal').showModal()}><a>Join a Channel/Class</a></li>
-                                    <JoinModal />
+                                    <JoinModal token={token} />
 
                                     <li onClick={() => document.getElementById("create_modal").showModal()}>
                                         <a>Create a Channel/Class</a>
                                     </li>
-                                    <CreateModal />
+                                    <CreateModal token={token} />
 
                                     <li onClick={() => document.getElementById("post_modal").showModal()}><a>Create a Public Post</a></li>
-                                    <PostModal />
+                                    <PostModal token={token} />
                                 </ul>
                             </div>
                         </dialog>
@@ -197,19 +255,20 @@ const Channel = ({ token }) => {
 
                     <h1>CHANNELS</h1>
                     <div className="classes">
-
-                        <button className="channel" onClick={showGroup}>
-                            <img src={techsub} alt="channel" />
-                            <p>Machine Learning & AI Learning in Computer Programming</p>
-                            <div className="badge badge-primary">+21</div>
-                        </button>
-
+                        {channels.map((channel) => (
+                            <button key={channel.channel_code} className="channel" onClick={() => showGroup(channel)}>
+                                <img src={imageMap[channel.channel_image]} alt="channel" />
+                                <p>{channel.channel_name}</p>
+                                <div className="badge badge-primary">99+</div>
+                            </button>
+                        ))}
                     </div>
 
                 </nav>
                 <div className='container-channel'>
+                    {activeComponent === 'DefaultChannel' && <DefaultChannel />}
                     {activeComponent === 'GeneralChannel' && <NewPage />}
-                    {activeComponent === 'GroupChannel' && <GroupChannel />}
+                    {activeComponent === 'GroupChannel' && <GroupChannel channelDetails={selectedChannel} />}
                 </div>
 
             </main>

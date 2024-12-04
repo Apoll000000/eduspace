@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import './styles/Main.css';
 import fb from "../assets/facebook.png";
 import google from "../assets/google.png";
@@ -20,7 +20,12 @@ const Main = ({setToken}) => {
     });
 
     const [alertMessage, setAlertMessage] = useState(null); // State for alert messages
-    const [alertType, setAlertType] = useState("info"); // Alert type (info, success, error)
+    const [alertType, setAlertType] = useState("alert-info"); // Alert type (info, success, error)
+
+    useEffect(() => {
+        console.log("Alert type changed to:", alertType);
+    }, [alertType]);
+
     const navigate = useNavigate(); // Initialize useNavigate
 
     function handleChange(event) {
@@ -44,7 +49,7 @@ const Main = ({setToken}) => {
             }
 
             setAlertMessage("Successfully Logged In");
-            setAlertType("success");
+            setAlertType("alert-success");
             console.log(data);
             setToken(data);
             setTimeout(() => {
@@ -53,7 +58,7 @@ const Main = ({setToken}) => {
 
         } catch (error) {
             setAlertMessage(error.message);
-            setAlertType("error");
+            setAlertType("alert-error");
         }
     }
 
@@ -82,7 +87,7 @@ const Main = ({setToken}) => {
                 </section>
 
                 {alertMessage && (
-                    <div role="alert" className={`fixed top-3 alert alert-${alertType}`}>
+                    <div role="alert" className={`fixed top-3 alert ${alertType}`}>
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             fill="none"

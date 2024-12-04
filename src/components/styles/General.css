@@ -98,3 +98,29 @@
     margin-top: 10px;
     margin-left: 1%;
 }
+
+.poll {
+    cursor: pointer;
+    padding: 12px;
+    background-color: rgba(0, 0, 0, 0.082);
+    border-radius: 10px;
+    transition: ease-in-out .1s;
+    margin-top: 5px;
+}
+
+.poll h3 {
+    color: black;
+}
+
+.poll:active {
+    scale: 99%;
+}
+
+.survey_body h4 {
+    font-weight: 600;
+}
+
+.squestion {
+    padding: 10px;
+    margin-top: 20px;
+}

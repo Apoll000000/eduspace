@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import './styles/Main.css';
 import logo from "../assets/EDUSPACE.png";
 import { createClient } from "@supabase/supabase-js";
@@ -16,7 +16,10 @@ function Signup() {
     });
 
     const [alertMessage, setAlertMessage] = useState(null); // State for alert messages
-    const [alertType, setAlertType] = useState("info"); // Alert type (info, success, error)
+    const [alertType, setAlertType] = useState("alert-info"); // Alert type (info, success, error)
+    useEffect(() => {
+        console.log("Alert type changed to:", alertType);
+    }, [alertType]);
 
     function handleChange(event) {
         setFormData((prevFormData) => ({
@@ -30,7 +33,7 @@ function Signup() {
 
         if (formData.password !== formData.confirmPassword) {
             setAlertMessage("Passwords do not match. Please try again.");
-            setAlertType("error");
+            setAlertType("alert-error");
             return;
         }
 
@@ -43,7 +46,7 @@ function Signup() {
             if (signUpError) throw signUpError;
 
             setAlertMessage("Check your email for verification.");
-            setAlertType("info");
+            setAlertType("alert-warning");
 
             // Add a retry mechanism with a maximum number of attempts
             let attempts = 0;
@@ -61,18 +64,18 @@ function Signup() {
 
                     if (insertError) throw insertError;
 
-                    setAlertMessage("Account created successfully and added to the database.");
-                    setAlertType("success");
+                    // setAlertMessage("Account created successfully and added to the database.");
+                    // setAlertType("alert-success");
                     return;
                 }
                 attempts++;
             }
 
             setAlertMessage("Verification timeout. Please verify your email manually.");
-            setAlertType("error");
+            setAlertType("alert-error");
         } catch (error) {
             setAlertMessage(error.message || "An unexpected error occurred.");
-            setAlertType("error");
+            setAlertType("alert-error");
         }
     }
 
@@ -103,7 +106,7 @@ function Signup() {
 
                 {/* Alert Section */}
                 {alertMessage && (
-                    <div role="alert" className={`fixed top-3 alert alert-${alertType}`}>
+                    <div role="alert" className={`fixed top-3 alert ${alertType}`}>
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             fill="none"

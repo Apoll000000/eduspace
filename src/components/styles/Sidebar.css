@@ -105,7 +105,7 @@ nav h1 {
     font-weight: 400;
 }
 
-@media (min-width: 0px) and (max-width: 968px) {
+@media (min-width: 0px) and (max-width: 1068px) {
     .channel p {
         font-size: 90%;
     }
@@ -127,7 +127,7 @@ nav h1 {
     }
 }
 
-@media (min-width: 0px) and (max-width: 737px) {
+@media (min-width: 0px) and (max-width: 980px) {
     #sidebar {
         display: none;
     }

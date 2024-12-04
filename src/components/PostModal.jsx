@@ -1,64 +1,144 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
+import { createClient } from '@supabase/supabase-js';
 
-function PostModal() {
-    const [activeTab, setActiveTab] = useState("poll"); // Default tab
-    const [attachments, setAttachments] = useState([""]); // Initial attachment list
+const SUPABASE_URL = "https://bwkkphvzmigjrnyptzhv.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3a2twaHZ6bWlnanJueXB0emh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE2NTQ1MjYsImV4cCI6MjA0NzIzMDUyNn0.VObIEpLVaxmi6wW8fL3TCMTzfLswcB6cawsFbVgcXmQ"; // Replace with your Supabase anon key
 
-    // Handle adding a new attachment input
-    const addAttachment = () => {
-        setAttachments([...attachments, ""]);
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+function PostModal({ token }) {
+    const [activeTab, setActiveTab] = useState("poll");
+    const [attachments, setAttachments] = useState([]);
+    const [pollOptions, setPollOptions] = useState(["", ""]);
+    const [postDescription, setpostDescription] = useState("");
+    const [surveyQuestions, setSurveyQuestions] = useState([{ type: "yesNo", text: "", equivalents: [] }]);
+
+    const handleFileChange = (index, file) => {
+        setAttachments((prev) =>
+            prev.map((attachment, i) => (i === index ? file : attachment))
+        );
     };
 
-    // Handle removing an attachment input
-    const removeAttachment = (index) => {
-        const updatedAttachments = attachments.filter((_, i) => i !== index);
-        setAttachments(updatedAttachments);
-    };
+    const addAttachment = () => setAttachments([...attachments, ""]);
+    const removeAttachment = (index) => setAttachments(attachments.filter((_, i) => i !== index));
 
-    // State for Poll options
-    const [pollOptions, setPollOptions] = useState(["", ""]); // Start with 2 options
-
-    // State for Survey questions
-    const [surveyQuestions, setSurveyQuestions] = useState([
-        { type: "yesNo", text: "", equivalents: [] },
-    ]);
-
-    // Poll Handlers
     const addPollOption = () => setPollOptions([...pollOptions, ""]);
-    const removePollOption = (index) =>
-        setPollOptions(pollOptions.filter((_, i) => i !== index));
-    const handlePollOptionChange = (index, value) =>
-        setPollOptions(
-            pollOptions.map((option, i) => (i === index ? value : option))
-        );
+    const removePollOption = (index) => setPollOptions(pollOptions.filter((_, i) => i !== index));
+    const handlePollOptionChange = (index, value) => setPollOptions(pollOptions.map((option, i) => (i === index ? value : option)));
 
-    // Survey Handlers
-    const addSurveyQuestion = () =>
-        setSurveyQuestions([
-            ...surveyQuestions,
-            { type: "yesNo", text: "", equivalents: [] },
-        ]);
-    const removeSurveyQuestion = (index) =>
-        setSurveyQuestions(surveyQuestions.filter((_, i) => i !== index));
-    const handleSurveyChange = (index, key, value) =>
-        setSurveyQuestions(
-            surveyQuestions.map((q, i) =>
-                i === index ? { ...q, [key]: value } : q
-            )
-        );
-    const addEquivalent = (index) =>
-        handleSurveyChange(index, "equivalents", [
-            ...(surveyQuestions[index].equivalents || []),
-            "",
-        ]);
-    const removeEquivalent = (questionIndex, equivalentIndex) =>
-        handleSurveyChange(
-            questionIndex,
-            "equivalents",
-            surveyQuestions[questionIndex].equivalents.filter(
-                (_, i) => i !== equivalentIndex
-            )
-        );
+    const addSurveyQuestion = () => setSurveyQuestions([...surveyQuestions, { type: "yesNo", text: "", equivalents: [] }]);
+    const removeSurveyQuestion = (index) => setSurveyQuestions(surveyQuestions.filter((_, i) => i !== index));
+    const handleSurveyChange = (index, key, value) => setSurveyQuestions(surveyQuestions.map((q, i) => (i === index ? { ...q, [key]: value } : q)));
+    const addEquivalent = (index) => handleSurveyChange(index, "equivalents", [...(surveyQuestions[index].equivalents || []), ""]);
+    const removeEquivalent = (questionIndex, equivalentIndex) => handleSurveyChange(questionIndex, "equivalents", surveyQuestions[questionIndex].equivalents.filter((_, i) => i !== equivalentIndex));
+
+    const [alertMessage, setAlertMessage] = useState(null); // State for alert messages
+    const [alertType, setAlertType] = useState("alert-info");
+
+    useEffect(() => {
+        console.log("Alert type changed to:", alertType);
+    }, [alertType]);
+
+
+    const uploadAttachments = async () => {
+        const uploadedFiles = [];
+        for (const file of attachments) {
+            const { data, error } = await supabase.storage
+                .from("posts_attachments")
+                .upload(`posts/${file.name}`, file);
+            if (error) {
+                console.error("Error uploading file:", error);
+                setAlertType("alert-error");
+                setAlertMessage("Error uploading file.");
+                return [];
+            }
+            uploadedFiles.push(data.path);
+        }
+        return uploadedFiles;
+    };
+
+    const handlePostSubmit = async (e) => {
+        e.preventDefault();
+
+        const uploadedFiles = await uploadAttachments();
+
+        // Construct the post data
+        const postContent = activeTab === activeTab ? postDescription : "";
+        const newPost = {
+            user_id: token.user.id,
+            post_channel: "general",
+            post_category: activeTab,
+            content: postContent,
+            attachments: uploadedFiles,
+            poll_options: activeTab === "poll" ? pollOptions : null,
+            survey_questions: activeTab === "survey" ? surveyQuestions : null,
+        };
+        // Perform validation based on the active tab
+        if (activeTab === "text") {
+            if (!postContent.trim()) {
+                setAlertType("alert-error");
+                setAlertMessage("Text content cannot be empty.");
+                return;
+            }
+        } else if (activeTab === "textAttachment") {
+            if (attachments.some((attachment) => !attachment) || !uploadedFiles.length || !postContent.trim()) {
+                setAlertType("alert-error");
+                setAlertMessage("Text must be filled and all attachment fields must have valid files.");
+                return;
+            }
+        } else if (activeTab === "poll") {
+            if (pollOptions.some((option) => !option.trim()) || !postContent.trim()) {
+                setAlertType("alert-error");
+                setAlertMessage("Poll question & all options must be filled.");
+                return;
+            }
+        } else if (activeTab === "survey") {
+            if (surveyQuestions.some((q) => !q.text.trim()) || !postContent.trim()) {
+                setAlertType("alert-error");
+                setAlertMessage("Survey description & survey questions must have text.");
+                return;
+            }
+            if (
+                surveyQuestions.some(
+                    (q) =>
+                        q.type === "rating" &&
+                        (q.equivalents || []).some((eq) => !eq.trim())
+                )
+            ) {
+                setAlertType("alert-error");
+                setAlertMessage("All equivalents in rating questions must be filled.");
+                return;
+            }
+        }
+
+        try {
+            const { data, error } = await supabase.from("tbl_posts").insert([newPost]);
+            if (error) {
+                console.error("Error inserting post: ", error);
+                setAlertType("alert-error");
+                setAlertMessage("Error inserting post");
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                console.log("Post successfully created:", data);
+                setAlertType("alert-success");
+                setAlertMessage("Post successfully created");
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            }
+        } catch (error) {
+            console.error("Error submitting post:", error);
+            setAlertType("alert-error");
+            setAlertMessage("Error submitting post");
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        }
+    };
+
+
 
     // Render Tab Content
     const renderContent = () => {
@@ -70,6 +150,12 @@ function PostModal() {
                         <textarea
                             className="textarea textarea-bordered w-full"
                             placeholder="Write your text here..."
+                            value={postDescription}
+                            onChange={(e) =>
+                                setpostDescription(
+                                    e.target.value
+                                )
+                            }
                         ></textarea>
                     </div>
                 );
@@ -80,13 +166,17 @@ function PostModal() {
                         <textarea
                             className="textarea textarea-bordered w-full mb-4"
                             placeholder="Write your text here..."
+                            value={postDescription}
+                            onChange={(e) => setpostDescription(e.target.value)}
                         ></textarea>
                         <div className="space-y-2">
-                            {attachments.map((_, index) => (
+                            {attachments.map((attachment, index) => (
                                 <div key={index} className="flex items-center gap-2">
                                     <input
                                         type="file"
                                         className="file-input file-input-bordered w-full"
+                                        onChange={(e) => handleFileChange(index, e.target.files[0])}
+
                                     />
                                     <button
                                         type="button"
@@ -107,6 +197,7 @@ function PostModal() {
                         </button>
                     </div>
                 );
+
             case "poll":
                 return (
                     <div>
@@ -115,6 +206,12 @@ function PostModal() {
                             type="text"
                             className="input input-bordered w-full mb-4"
                             placeholder="Poll Question"
+                            value={postDescription}
+                            onChange={(e) =>
+                                setpostDescription(
+                                    e.target.value
+                                )
+                            }
                         />
                         {pollOptions.map((option, index) => (
                             <div
@@ -155,9 +252,15 @@ function PostModal() {
                 return (
                     <div>
                         <h2 className="text-lg font-bold">Create a Survey</h2>
-                        <textarea 
-                            className="textarea textarea-bordered w-full mb-4" 
+                        <textarea
+                            className="textarea textarea-bordered w-full mb-4"
                             placeholder="Survey Description"
+                            value={postDescription}
+                            onChange={(e) =>
+                                setpostDescription(
+                                    e.target.value
+                                )
+                            }
                         ></textarea>
                         {surveyQuestions.map((question, index) => (
                             <div
@@ -279,7 +382,26 @@ function PostModal() {
         <>
             <dialog id="post_modal" className="modal">
                 <div className="modal-box">
-                    <form method="dialog">
+                    {alertMessage && (
+                        <div role="alert" className={`alert ${alertType}`}>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                className="h-6 w-6 shrink-0 stroke-current"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                ></path>
+                            </svg>
+                            <span>{alertMessage}</span>
+                        </div>
+                    )}
+
+                    <form method="dialog" onSubmit={handlePostSubmit}>
                         <div role="tablist" className="tabs tabs-boxed">
                             <a
                                 role="tab"
@@ -322,8 +444,8 @@ function PostModal() {
                         <div className="mt-4">{renderContent()}</div>
 
                         <div className="flex justify-end mt-2 w-full gap-2">
-                            <button className="btn btn-neutral">Cancel</button>
-                            <button className="btn btn-primary">Confirm Post</button>
+                            <button className="btn btn-neutral" onClick={() => document.getElementById("post_modal").close()}>Cancel</button>
+                            <button className="btn btn-primary" type="submit">Confirm Post</button>
                         </div>
                     </form>
                 </div>
