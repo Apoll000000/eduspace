@@ -12,6 +12,22 @@ function General() {
     const [posts, setPosts] = useState([]);
     const [categories, setCategories] = useState([]);
 
+    const [previewContent, setPreviewContent] = useState(null); // Preview URL
+    const [previewType, setPreviewType] = useState(null); // Preview type: "image", "video", "pdf", or "docx"
+    const [isModalOpen, setModalOpen] = useState(false); // Controls modal visibility
+
+    const handlePreview = (url, type) => {
+        setPreviewContent(url);
+        setPreviewType(type);
+        setModalOpen(true); // Open modal on preview
+    };
+
+    const closePreview = () => {
+        setModalOpen(false); // Close modal
+        setPreviewContent(null);
+        setPreviewType(null);
+    };
+
     // Fetch posts from Supabase
     useEffect(() => {
         async function fetchPosts() {
@@ -61,12 +77,105 @@ function General() {
                                             <input type="checkbox" />
                                             <div className="collapse-title text-s font-medium">View Attachments</div>
                                             <div className="collapse-content">
-                                                {post.attachments.map((attachment, index) => (
-                                                    <p key={index}>{attachment}</p>
-                                                ))}
+                                                <div className="attachments-grid">
+                                                    {post.attachments.map((attachment, index) => {
+                                                        const attachmentUrl = `${SUPABASE_URL}/storage/v1/object/public/posts_attachments/${attachment}`;
+                                                        console.log("Generated URL:", attachmentUrl); // Debugging URL
+
+                                                        const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(attachment);
+                                                        const isVideo = /\.(mp4|webm|ogg)$/i.test(attachment);
+                                                        const isPDF = /\.pdf$/i.test(attachment);
+                                                        const isDocx = /\.docx$/i.test(attachment);
+
+                                                        return (
+                                                            <div key={index} className="attachment-item">
+                                                                {isImage ? (
+                                                                    <img
+                                                                        src={attachmentUrl}
+                                                                        alt={`Attachment ${index + 1}`}
+                                                                        className="attachment-image"
+                                                                        onClick={() => handlePreview(attachmentUrl, "image")} // Open image preview
+                                                                    />
+                                                                ) : isVideo ? (
+                                                                    <video
+                                                                        controls
+                                                                        className="attachment-video"
+                                                                        onClick={() => handlePreview(attachmentUrl, "video")} // Open video preview
+                                                                    >
+                                                                        <source src={attachmentUrl} type="video/mp4" />
+                                                                        Your browser does not support the video tag.
+                                                                    </video>
+                                                                ) : isPDF ? (
+                                                                    <div
+                                                                        className="attachment-link"
+                                                                        onClick={() => handlePreview(attachmentUrl, "pdf")} // Open PDF preview
+                                                                    >
+                                                                        {attachment}
+                                                                    </div>
+                                                                ) : isDocx ? (
+                                                                    <div
+                                                                        className="attachment-link"
+                                                                        onClick={() => handlePreview(attachmentUrl, "docx")} // Open DOCX preview
+                                                                    >
+                                                                        {attachment}
+                                                                    </div>
+                                                                ) : (
+                                                                    <a
+                                                                        href={attachmentUrl}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        className="attachment-link"
+                                                                    >
+                                                                        {attachment}
+                                                                    </a>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
                                             </div>
                                         </div>
                                     )}
+
+                                    {/* DaisyUI Modal for Preview */}
+                                    {isModalOpen && (
+                                        <div className="modal modal-open">
+                                            <div className="modal-box relative">
+                                                {previewType === "image" && (
+                                                    <img src={previewContent} alt="Preview" className="modal-image" />
+                                                )}
+                                                {previewType === "video" && (
+                                                    <video controls className="modal-video">
+                                                        <source src={previewContent} type="video/mp4" />
+                                                        Your browser does not support the video tag.
+                                                    </video>
+                                                )}
+                                                {previewType === "pdf" && (
+                                                    <iframe
+                                                        src={previewContent}
+                                                        className="modal-pdf"
+                                                        title="PDF Preview"
+                                                        frameBorder="0"
+                                                    />
+                                                )}
+                                                {previewType === "docx" && (
+                                                    <div className="modal-docx">
+                                                        <iframe
+                                                            src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(previewContent)}`}
+                                                            title="DOCX Preview"
+                                                            className="modal-docx-iframe"
+                                                            frameBorder="0"
+                                                        />
+                                                    </div>
+                                                )}
+                                                <button className="btn btn-sm btn-circle absolute right-2 top-2" onClick={closePreview}>
+                                                    ✕
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
+
 
                                     {post.post_category === "text" && (
                                         <div className="collapse comments">
@@ -140,7 +249,7 @@ function General() {
                                                 <div className="modal-box">
                                                     <form method="dialog">
                                                         <h3 className="font-bold text-lg">Survey Questions</h3>
-                                                        <p className="py-4 survey_desc">{post.content}</p>
+                                                        <h4 className="py-4 survey_desc">{post.content}</h4>
                                                         <div className="py-4">
                                                             {post.survey_questions.map((question, index) => (
                                                                 <div key={index} className={`squestion survey_${question.type}`}>

@@ -4,7 +4,7 @@
     border-radius: 12px;
     padding: 30px;
     display: flex;
-    
+
     align-items: center;
     gap: 20px;
 }
@@ -54,7 +54,7 @@
 }
 
 .post {
-    width: 100%; 
+    width: 100%;
     background-color: rgb(236, 235, 235);
     border-radius: 16px;
     padding: 15px 30px 15px 30px;
@@ -152,4 +152,65 @@
     font-size: 80%;
     margin-top: 10px;
     margin-left: 1%;
+}
+
+@media (min-width: 0px) and (max-width: 737px) {
+
+    .channel-banner {
+        width: 100%;
+        background: radial-gradient(919px at 1.7% 6.1%, rgb(35, 57, 82) 0%, rgb(193, 220, 231) 100.2%);
+        border-radius: 12px;
+        padding: 20px 10px 20px 10px;
+        display: flex;
+
+        align-items: center;
+        gap: 20px;
+    }
+
+    .channel-banner h1 {
+        color: aliceblue;
+        font-size: 5vw;
+        font-weight: 600;
+        line-height: 1;
+        width: 50%;
+    }
+
+    .channel-banner h2 {
+        width: 50%;
+        color: aliceblue;
+        font-size: 4vw;
+        font-weight: 600;
+    }
+
+    .channel-img {
+        width: 50px;
+    }
+
+    .details {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .details>div {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        gap: 5px;
+    }
+
+    .details>div h3 {
+        width: 50%;
+        color: aliceblue;
+        word-wrap: break-word;
+        /* Ensures long words break to next line */
+        overflow-wrap: break-word;
+    }
+
+    .details>div h4 {
+        width: 50%;
+        color: aliceblue;
+    }
+
 }
