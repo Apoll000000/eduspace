@@ -8,9 +8,7 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-function General() {
-    const [posts, setPosts] = useState([]);
-    const [categories, setCategories] = useState([]);
+function ChannelContent({posts, categories}) {
 
     const [previewContent, setPreviewContent] = useState(null); // Preview URL
     const [previewType, setPreviewType] = useState(null); // Preview type: "image", "video", "pdf", or "docx"
@@ -29,30 +27,7 @@ function General() {
     };
 
     // Fetch posts from Supabase
-    useEffect(() => {
-        async function fetchPosts() {
-            const { data, error } = await supabase
-                .from('tbl_posts')
-                .select(`
-                *,
-                tbl_users (name)
-            `)
-            .eq('post_channel',"general");
-
-            if (error) {
-                console.error('Error fetching posts:', error);
-            } else {
-                setPosts(data);
-
-                // Extract unique categories
-                const uniqueCategories = [...new Set(data.map(post => post.post_category))];
-                setCategories(uniqueCategories);
-            }
-        }
-
-        fetchPosts();
-        console.log(posts);
-    }, []);
+    
 
     return (
         <div className="general-container">
@@ -329,4 +304,4 @@ function General() {
     );
 }
 
-export default General;
+export default ChannelContent;

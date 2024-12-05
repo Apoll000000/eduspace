@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import './styles/Channel.css'
 import './styles/Sidebar.css'
-import NewPage from './General'
+import General from './General'
 import GroupChannel from './GroupChannel'
 import DefaultChannel from './DefaultChannel'
+import AssignmentChannel from './AssignmentChannel'
 import plus from "../assets/plus.png";
 import message from "../assets/chat.png";
 import school from "../assets/school.png";
@@ -36,6 +37,7 @@ const Channel = ({ token }) => {
 
 
     const showGeneral = () => setActiveComponent('GeneralChannel');
+    const showAssign = () => setActiveComponent('AssignmentChannel');
 
     const imageMap = {
         alpha,
@@ -112,9 +114,38 @@ const Channel = ({ token }) => {
         fetchChannels();
     }, [token]);
 
+    const [posts, setPosts] = useState([]);
+    const [categories, setCategories] = useState([]);
+
+    const fetchPostsForChannel = async (channelCode) => {
+        try {
+            const { data, error } = await supabase
+                .from('tbl_posts')
+                .select(`
+                    *,
+                    tbl_users (name)
+                `)
+                .eq('post_channel', channelCode);
+
+            if (error) {
+                console.error('Error fetching posts:', error);
+                return;
+            }
+
+            setPosts(data);
+
+            // Extract unique categories
+            const uniqueCategories = [...new Set(data.map((post) => post.post_category))];
+            setCategories(uniqueCategories);
+        } catch (err) {
+            console.error('Error during post fetching:', err);
+        }
+    };
+
     const showGroup = (channel) => {
         setSelectedChannel(channel); // Set the selected channel
         setActiveComponent('GroupChannel'); // Show the GroupChannel component
+        fetchPostsForChannel(channel.channel_code);
     };
 
 
@@ -124,26 +155,36 @@ const Channel = ({ token }) => {
                 <div className="drawer lg:drawer-open">
                     <input id="my-drawer-2" type="checkbox" className="drawer-toggle" />
                     <div className="drawer-content flex flex-col items-center">
-                        <label htmlFor="my-drawer-2" className="fixed top-3 left-[20px] btn btn-primary drawer-button lg:hidden">            
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="h-5 w-5"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M4 6h16M4 12h16M4 18h16"
-                                    />
-                                </svg>
+                        <label htmlFor="my-drawer-2" className="fixed top-3 left-[20px] btn btn-primary drawer-button lg:hidden">
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-5 w-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M4 6h16M4 12h16M4 18h16"
+                                />
+                            </svg>
                         </label>
                         <div className='container-channel mt-12 lg:mt-0'>
                             {activeComponent === 'DefaultChannel' && <DefaultChannel />}
-                            {activeComponent === 'GeneralChannel' && <NewPage />}
-                            {activeComponent === 'GroupChannel' && <GroupChannel channelDetails={selectedChannel} />}
+                            {activeComponent === 'GeneralChannel' && <General />}
+                            {activeComponent === 'AssignmentChannel' && <AssignmentChannel token={token}/>}
+                            {activeComponent === 'GroupChannel' &&
+                                selectedChannel && (
+                                    <GroupChannel
+                                        posts={posts}
+                                        categories={categories}
+                                        token={token}
+                                        channelDetails={selectedChannel}
+                                    />
+                                )
+                            }
                         </div>
                     </div>
                     <div className="drawer-side">
@@ -153,7 +194,7 @@ const Channel = ({ token }) => {
                             <nav id="sidebar">
                                 <div className="docker">
                                     <div className="dropdown dropdown-start">
-                                        <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
+                                        <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar online">
                                             <div className="w-10 rounded-full">
                                                 <img
                                                     alt="Tailwind CSS Navbar component"
@@ -263,7 +304,7 @@ const Channel = ({ token }) => {
                                     HOME
                                 </button>
 
-                                <button className="btn home shadow-xl">
+                                <button className="btn home shadow-xl" onClick={showAssign}>
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
                                         className="h-5 w-5"

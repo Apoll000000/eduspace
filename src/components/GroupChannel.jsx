@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import './styles/GroupChannel.css'
 import techsub from "../assets/robotic-hand.png"
 import { createClient } from "@supabase/supabase-js";
+import CreateModalChannel from './CreateModalChannel';
+import ChannelContent from './ChannelContent';
+import CreateModalAssignment from './CreateModalAssignment';
 
 import send from "../assets/send.png";
 import alpha from "../assets/alpha.png";
@@ -16,7 +19,7 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-function GroupChannel({ channelDetails }) {
+function GroupChannel({ channelDetails, token, posts, categories }) {
 
     const imageMap = {
         alpha,
@@ -26,6 +29,8 @@ function GroupChannel({ channelDetails }) {
         eta,
         gamma,
     };
+
+
 
     const [creatorName, setCreatorName] = useState("Loading...");
 
@@ -58,6 +63,25 @@ function GroupChannel({ channelDetails }) {
         fetchCreatorName();
     }, [channelDetails.creator_id]);
 
+    const [userName, setUserName] = useState("");
+
+    useEffect(() => {
+        async function fetchName() {
+            const { data, error } = await supabase
+                .from("tbl_users") // Replace with your table name
+                .select("name")
+                .eq("id", token?.user?.id);
+
+            if (error) {
+                console.error("Error fetching data:", error);
+            } else if (data && data.length > 0) {
+                setUserName(data[0].name);
+            }
+        }
+
+        fetchName();
+    }, [token]);
+
     return (
         <>
             <section className='channel-banner shadow-xl'>
@@ -74,52 +98,18 @@ function GroupChannel({ channelDetails }) {
                 </div>
             </section>
 
+            <div className="flex mt-4 gap-3">
+                <button className="btn btn-active btn-primary" onClick={() => document.getElementById("create_modal_channel").showModal()}>Create Post</button>
+                {userName === creatorName && (
+                    <button className="btn btn-active btn-primary" onClick={() => document.getElementById("create_modal_assignment").showModal()}>Create Assignment</button>
+                )}
+            </div>
+            <CreateModalChannel channelDetails={channelDetails} token={token} />
+            <CreateModalAssignment channelDetails={channelDetails} token={token} />
+
+
             <section className='channel-content shadow-xl'>
-                <div className="post">
-                    <div className="post-author">
-                        <img src="https://cdn-icons-png.flaticon.com/512/1053/1053244.png" alt="author" />
-                        <h4>Patrick Paul Leonen</h4>
-                    </div>
-
-                    <div className="post-content">
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Porro odio optio enim. Minima, at consequuntur odio, fugiat quas natus ipsa amet rem in, magni cumque. Quasi voluptatibus omnis sit modi?</p>
-                    </div>
-
-                    <div className="post-buttons">
-                        <div className="collapse attachments">
-                            <input type="checkbox" />
-                            <div className="collapse-title text-s font-medium">View Atachments</div>
-                            <div className="collapse-content">
-                                <p>No attachments available</p>
-                            </div>
-                        </div>
-
-                        <div className="collapse comments">
-                            <input type="checkbox" />
-                            <div className="collapse-title text-s font-medium">View Comments</div>
-                            <div className="collapse-content">
-                                <div className="comment-box">
-                                    <textarea className="textarea textarea-bordered w-full" placeholder="Write a comment here"></textarea>
-                                    <img src={send} alt="send" />
-                                </div>
-
-                                <div className="comment">
-                                    <div className="comment-author">
-                                        <img src="https://cdn-icons-png.flaticon.com/512/1053/1053244.png" alt="author" />
-                                        <h4>Patrick Paul Leonen</h4>
-                                    </div>
-                                    <p className="comment-time">12:00</p>
-                                    <p className='comment-content'>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Voluptates delectus voluptatum nisi, ipsum dolorum praesentium, obcaecati illo et maxime ducimus, necessitatibus neque reprehenderit culpa! Quos voluptatibus temporibus placeat excepturi necessitatibus.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-
-
-
+                <ChannelContent posts={posts} categories={categories} channelDetails={channelDetails} />
             </section>
 
 
